@@ -1,4 +1,4 @@
-current = {
+var current = {
 	account_id : undefined,
 };
 
@@ -82,12 +82,73 @@ function checkout() {
 	api.transaction.add(refresh, account_id, cash);
 }
 
+var boxes = {
+	number : {
+		visible: false,
+		
+		show : function() {
+			this.visible = true;
+			$("#search_number_box").css("display", "block");
+		},
+		
+		hide : function() {
+			this.visible = false;
+			$("#search_number_box").css("display", "none");
+		}
+	},
+	
+	name : {
+		visible: false,
+		
+		show : function() {
+			this.visible = true;
+			$("#search_name_box").css("display", "block");
+		},
+		
+		hide : function() {
+			this.visible = false;
+			$("#search_name_box").css("display", "none");
+		},
+	},
+	
+	click : function(btnName) {
+		var active, inactive;
+		
+		switch (btnName) {
+			case "number": active = this.number; inactive = this.name; break;
+			case "name": active = this.name; inactive = this.number; break;
+		}
+		
+		if (inactive.visible) {
+			inactive.hide();
+		}
+		
+		if (!active.visible) {
+			active.show();
+		}
+		else {
+			active.hide();
+		}
+	}
+};
+
 $("#searchByIDForm").submit(function(ev) {
 	ev.preventDefault();
 	getAccount();
+	boxes.number.hide();
 });
 
 $("#checkout").submit(function(ev) {
 	ev.preventDefault();
 	checkout();
+});
+
+$("#search_nb").click(function(ev) {
+	ev.preventDefault();
+	boxes.click("number");
+});
+
+$("#search_name").click(function(ev) {
+	ev.preventDefault();
+	boxes.click("name");
 });
