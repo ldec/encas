@@ -1,12 +1,11 @@
 {% extends 'base.html' %}
+{% block title %} - Administration{% endblock %}
+
 {% block javascript %}
-<script type="text/javascript" src="/static/js/accounts.js"></script>
-<script type="text/javascript" src="/static/js/accounts_list.js"></script>
+<script type="text/javascript" src="/static/js/admin.js"></script>
 {% endblock %}
 
 {% block content %}
-
-<div class="container">
 	<div class="row">
 		<div class="col-md-6">
 			<h3>Ajout de compte</h3><hr />
@@ -37,6 +36,5 @@
 			</table>
 		</div>
 	</div>
-</div>
 
 {% endblock %}

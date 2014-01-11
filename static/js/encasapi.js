@@ -40,30 +40,25 @@ var api = {
 			jQuery.post('/account/create', data, callback);
 		},
 		
-		edit : function(calllback, account_id, firstname, lastname, promo) {
+		edit : function(callback, account_id, firstname, lastname, promo) {
 			var url = '/account/' + account_id + '/edit';
 			var data = {'firstname' : firstname, 'lastname' : lastname, 'promo' : promo};
 			jQuery.post(url, data, callback);
 		},
 		
-		balance : function(callback, account_id, calculate) {
-			if (calculate === false || calculate === undefined) {
-				var url = '/account/' + account_id + '/balance';
-			}
-			else {
-				var url = '/account/' + account_id + '/calculate';
-			}
+		balance : function(callback, account_id) {
+			var url = '/account/' + account_id + '/calculate';
 			jQuery.get(url, callback);
 		}
 	},
 	
 	transaction : {
-		listByAccount : function(callback, account_id, revoked) {
-			if (revoked === true) {
+		listByAccount : function(callback, account_id, all) {
+			if (!all || all === undefined) {
 				var url = '/account/' + account_id + '/transactions';
 			}
 			else {
-				var url = '/account/' + account_id + '/transactions';
+				var url = '/account/' + account_id + '/transactions/all';
 			}
 			jQuery.get(url, callback);
 		},

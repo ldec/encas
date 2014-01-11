@@ -1,22 +1,4 @@
-var current = {
-	account_id : undefined,
-};
-
-function reportError(data) {
-	var alertbar = $("#encasAlert");
-	if (data.error) {
-		alertbar.css("display", "block");
-		alertbar.html("<b>Erreur</b> : " + data.reason);
-		return true;
-	}
-	alertbar.css("display", "none");
-	return false;
-}
-
-function getTransactions(account_id) {
-	var table = $("#transactionList");
-	table.children().remove();
-	
+function showAccount(number) {
 	function refresh(data) {
 		if (reportError(data)) {
 			return;
@@ -24,62 +6,59 @@ function getTransactions(account_id) {
 		
 		var data = data.data;
 		
-		for (var i=0; i < data.length; i++) {
-			var line = $("<tr>").appendTo(table);
-			if (data[i].balance < -10) { 
-				line.addClass("danger");
-			}
-			else {
-				if (data[i].balance <= 0) { 
-					line.addClass("warning");
-				}
-				else { 
-					line.addClass("success");
-				}
-			}
-			
-			$("<td>").html(data[i].operation).appendTo(line);
-			$("<td>").html(data[i].cash).appendTo(line);
-			$("<td>").html(data[i].balance).appendTo(line);
-		}
-	}
-	
-	api.transaction.listByAccount(refresh, account_id);
-}
-
-function getAccount() {
-	var number = $("#accountNumberInput").val();
-	
-	function refresh(data) {
-		if (reportError(data)) {
-			return;
-		}
-		
-		var data = data.data;
 		$("#accountNumber").html(data.number);
 		$("#name").html(data.firstname + " " + data.lastname);
 		$("#year").html(data.promo);
 		
 		current.account_id = data.id;
-		getTransactions(data.id);
+		if (current.search_callback !== undefined) {
+			current.search_callback(data.id);
+		}
 	}
 	
 	api.account.getByNumber(refresh, number);
 }
 
-function checkout() {
-	var account_id = current.account_id;
-	var cash = $("#checkout #directInput").val();
+function getAccount() {
+	var number = $("#accountNumberInput").val();
+	showAccount(number);
+}
+
+function searchAccountByName() {
+	var name = $("#searchByNameForm #nameInput").val();
+	var results = $("#search_name_box table tbody");
 	
 	function refresh(data) {
+		function retrieve(ev) {
+			ev.preventDefault();
+			var target = $(ev.target);
+			var number = target.closest("tr").find(".account_number:first()").html();
+			showAccount(number);
+			boxes.name.hide();
+			results.children().remove();
+		}
+	
 		if (reportError(data)) {
 			return;
 		}
-
-		getTransactions(account_id);
+				
+		results.children().remove();
+		
+		var data = data.data;
+		for (var i=0; i < data.length; i++) {
+			var account = data[i];
+			var line = $("<tr>").appendTo(results);
+			
+			$("<td>").addClass("account_number").html(account.number).appendTo(line);
+			$("<td>").html(account.firstname).appendTo(line);
+			$("<td>").html(account.lastname).appendTo(line);
+			$("<td>").html(account.promo).appendTo(line);
+			
+			line.click(retrieve);
+		}
 	}
 	
-	api.transaction.add(refresh, account_id, cash);
+	api.account.search(refresh, name);
 }
 
 var boxes = {
@@ -89,11 +68,13 @@ var boxes = {
 		show : function() {
 			this.visible = true;
 			$("#search_number_box").css("display", "block");
+			$("#search_number_box #accountNumberInput").focus();
 		},
 		
 		hide : function() {
 			this.visible = false;
 			$("#search_number_box").css("display", "none");
+			$("#search_number_box #accountNumberInput").val("");
 		}
 	},
 	
@@ -103,11 +84,13 @@ var boxes = {
 		show : function() {
 			this.visible = true;
 			$("#search_name_box").css("display", "block");
+			$("#searchByNameForm #nameInput").focus();
 		},
 		
 		hide : function() {
 			this.visible = false;
 			$("#search_name_box").css("display", "none");
+			$("#searchByNameForm #nameInput").val("");
 		},
 	},
 	
@@ -138,9 +121,9 @@ $("#searchByIDForm").submit(function(ev) {
 	boxes.number.hide();
 });
 
-$("#checkout").submit(function(ev) {
+$("#searchByNameForm").submit(function(ev) {
 	ev.preventDefault();
-	checkout();
+	searchAccountByName();
 });
 
 $("#search_nb").click(function(ev) {
@@ -151,4 +134,10 @@ $("#search_nb").click(function(ev) {
 $("#search_name").click(function(ev) {
 	ev.preventDefault();
 	boxes.click("name");
+});
+
+$("#searchByNameForm #nameInput").keyup(function(ev) {
+	if ($("#searchByNameForm #nameInput").val().length > 2) {
+		searchAccountByName();
+	}
 });

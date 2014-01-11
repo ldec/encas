@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 #   Encas Sales Management Server
 #   Copyright 2013 - Hugo Caille
 # 
@@ -54,9 +56,13 @@ def load_user(userid):
 def home():
     return render_template("home.html")
 
-@app.route('/accounts')
+@app.route('/account')
 def accounts():
-    return render_template("accounts.html")
+    return render_template("account.html")
+
+@app.route('/admin')
+def admin():
+    return render_template("admin.html")
 
 @app.route('/login', methods=['POST'])
 @errorhandler
@@ -118,13 +124,6 @@ def editAccount(id):
     else:
         raise MissingFieldsError(form.errors.keys())
 
-@app.route('/account/<id>/balance', methods=['GET'])
-@errorhandler
-def getBalance(id):
-    id = convert(int, id)
-    
-    return {'balance' : transaction.getBalance(id)}
-
 @app.route('/account/<id>/calculate', methods=['GET'])
 @errorhandler
 def calculateBalance(id):
@@ -134,12 +133,14 @@ def calculateBalance(id):
 @app.route('/account/<int:account_id>/transactions', methods=['GET'])
 @errorhandler
 def getTransactions(account_id):
-    return [tr.serialize() for tr in transaction.getByAccount(account_id)]
+    transactions = transaction.getByAccount(account_id, 5)
+    return [tr.serialize() for tr in transactions]
 
-@app.route('/account/<int:account_id>/revoked', methods=['GET'])
+@app.route('/account/<int:account_id>/transactions/all', methods=['GET'])
 @errorhandler
-def revokedByAccount(account_id):
-    return [tr.serialize() for tr in transaction.getByAccount(account_id, revoked=True)]
+def getAllTransactions(account_id):
+    transactions = transaction.getByAccount(account_id, None)
+    return [tr.serialize() for tr in transactions]
 
 @app.route('/transaction/add', methods=['POST'])
 @errorhandler
