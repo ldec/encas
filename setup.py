@@ -1,9 +1,5 @@
 from getpass import getpass
-from model.database import createTables
-from model import user
-
-print "Initializing database"
-createTables()
+from model import User
 
 print "Administrator account creation"
 username = raw_input("Username: ")
@@ -14,5 +10,5 @@ while True:
 	if password == confirm:
 		break
 
-new = user.create(username, password)
-user.makeAdmin(new.id)
+new = User.create(username, password)
+User(new.id).makeAdmin()
