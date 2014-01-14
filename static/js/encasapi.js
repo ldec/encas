@@ -16,8 +16,12 @@ var api = {
 	},
 	
 	account : {
-		list : function(callback) {
-			jQuery.get('/account/list', callback);
+		list : function(callback, filter) {
+            if(filter === undefined) {
+                filter = "active";
+            }
+            var url = '/account/list/' + filter;
+			jQuery.get(url, callback);
 		},
 		
 		get : function(callback, account_id) {
@@ -67,6 +71,10 @@ var api = {
 			}
 			jQuery.get(url, callback);
 		},
+
+        list : function(callback) {
+            jQuery.get('/transaction/list', callback);
+        },
 		
 		add : function(callback, account_id, cash) {
 			var data = {'account_id' : account_id, 'cash' : cash};

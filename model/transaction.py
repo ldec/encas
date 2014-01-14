@@ -19,7 +19,7 @@
 from database import session
 from database import Transaction as TransactionModel
 
-from account import Account
+import account
 
 class Transaction:
     @staticmethod
@@ -35,8 +35,20 @@ class Transaction:
         return session.query(TransactionModel).get(transaction_id)
 
     @staticmethod
+    def list():
+        transactions = session.query(TransactionModel).order_by("date desc").all()
+        for transaction in transactions:
+            acc = account.Account.get(transaction.account)
+            transaction.account_number = acc.number
+            transaction.account_firstname = acc.firstname
+            transaction.account_lastname = acc.lastname
+
+            transaction.to_serialize += ['account_number', 'account_firstname', 'account_lastname']
+        return transactions
+
+    @staticmethod
     def getByAccount(account_id, max=None, exclude_revoked=False):
-        Account.get(account_id) # Raises exception if account doesn't exist.
+        account.Account.get(account_id) # Raises exception if account doesn't exist.
         query = session.query(TransactionModel).filter_by(account=account_id)
         if exclude_revoked:
             query = query.filter_by(revoked=False)
