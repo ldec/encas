@@ -12,7 +12,22 @@ var api = {
 		
 		logout : function(callback) {
 			jQuery.get('/logout', callback);
-		}
+		},
+
+        list : function(callback) {
+            jQuery.get('/user/list', callback);
+        },
+
+        create_admin : function(callback, username, password, password_confirm) {
+            var url = '/user/admin/create';
+            var data = {'username' : username, 'password' : password, 'password_confirm' : password_confirm};
+            jQuery.post(url, data, callback);
+        },
+
+        remove : function(callback, user_id) {
+            var url = '/user/' + user_id + '/remove';
+            jQuery.post(url, callback);
+        }
 	},
 	
 	account : {
@@ -39,8 +54,16 @@ var api = {
 			jQuery.get(url, callback);
 		},
 		
-		create : function(callback, firstname, lastname, promo) {
+		create : function(callback, firstname, lastname, promo, number, balance) {
 			var data = {'firstname' : firstname, 'lastname' : lastname, 'promo' : promo};
+            if (number !== undefined) {
+                data['number'] = number;
+            }
+
+            if (balance !== undefined) {
+                data['balance'] = balance;
+            }
+
 			jQuery.post('/account/create', data, callback);
 		},
 		

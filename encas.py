@@ -37,17 +37,17 @@ import forms
 @app.route('/')
 @login_required
 def home():
-    return render_template("checkout.html", username=current_user.username)
+    return render_template("checkout.html")
 
 @app.route('/account')
 @login_required
 def accounts():
-    return render_template("account.html", username=current_user.username)
+    return render_template("account.html")
 
 @app.route('/admin')
 @login_required
 def admin():
-    return render_template("admin.html", username=current_user.username)
+    return render_template("admin.html")
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -60,6 +60,9 @@ def login():
         user = User.login(form.username.data, form.password.data)
         if user is not None:
             login_user(UserHandler(id=user.id))
+        else:
+            return render_template("login.html", credentials=True)
+
         return redirect(request.args.get("next") or url_for("home"))
 
     else:
@@ -82,8 +85,10 @@ def listAccounts(filter):
         accounts = Account.list("active")
     elif filter == "deleted":
         accounts = Account.list("deleted")
+    elif filter == "debts":
+        accounts = Account.list("debts")
     else:
-        raise ApiError("Wrong filter, must be one of these: active, deleted")
+        raise ApiError("Wrong filter, must be one of these: active, deleted, debts")
 
     return [acc.serialize() for acc in accounts]
 
@@ -113,7 +118,12 @@ def searchAccount(firstname):
 def createAccount():
     form = forms.AccountCreationForm()
     if form.validate_on_submit():
-        return Account.create(form.firstname.data, form.lastname.data, form.promo.data).serialize()
+        account = Account.create(form.firstname.data, form.lastname.data, form.promo.data, form.number.data)
+
+        if form.balance.data is not None:
+            Transaction.add(account.id, form.balance.data)
+
+        return account.serialize()
     else:
         raise MissingFieldsError(form.errors.keys())
 
@@ -183,6 +193,33 @@ def addTransaction():
 def revokeTransaction(id):
     id = convert(int, id)
     return Transaction(id).revoke().serialize()
+
+@app.route('/user/list', methods=['GET'])
+@login_required_api
+@errorhandler
+def userList():
+    return [user.serialize() for user in User.list()]
+
+@app.route('/user/admin/create', methods=['POST'])
+@login_required_api
+@errorhandler
+@admin_required
+def adminCreation():
+    form = forms.UserCreationForm()
+    if form.validate_on_submit():
+        user = User.create(form.username.data, form.password.data)
+        User(user.id).makeAdmin()
+        return user.serialize()
+    else:
+        raise MissingFieldsError(form.errors.keys())
+
+@app.route('/user/<id>/remove', methods=['POST'])
+@login_required_api
+@errorhandler
+@admin_required
+def userRemove(id):
+    id = convert(int, id)
+    return User(id).remove().serialize()
 
 if __name__ == '__main__':
     app.run()

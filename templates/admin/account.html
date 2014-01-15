@@ -2,21 +2,40 @@
     <div class="row">
         <div class="col-md-4">
             <h3>Ajout de compte</h3><hr />
-            <form data-bind="submit: add" id="addAccountForm">
+            <form data-bind="submit: add">
                 <div data-bind="with: add_fields">
+                    <div class="input-group">
+                        <span class="input-group-addon">#</span>
+                        <input data-bind="value: number" type="text" class="form-control" placeholder="Numéro de compte" />
+                    </div><br />
                     <input data-bind="value: lastname" class="form-control" name="lastname" placeholder="Prénom" /><br />
                     <input data-bind="value: firstname" class="form-control" type="text" name="firstname" placeholder="Nom" /><br />
                     <input data-bind="value: promo" class="form-control" name="promo" placeholder="Promo" /><br />
+                    <div class="input-group">
+                        <input data-bind="value: balance" type="text" class="form-control" placeholder="Solde initial" />
+                        <span class="input-group-addon">€</span>
+                    </div><br />
                     <button class="btn btn-primary">Ajouter</button>
                 </div>
             </form>
+
+            <br />
+            <div class="alert alert-info">
+                <p><b>Champs optionnels</b></p>
+                <p>Un numéro de compte libre sera automatiquement déterminé si vous laissez
+                le champ vide.</p>
+                <p>De même, un solde initial nul sera affecté si le champ est vide.</p>
+            </div>
         </div>
 
         <div class="col-md-8">
             <h3>Liste des comptes</h3><hr />
             <p>
-                <button data-bind="click: display_active" class="btn btn-link">Tous</button>
-                <button data-bind="click: display_deleted" class="btn btn-link">Supprimés</button>
+                <ul class="nav nav-tabs">
+                    <li data-bind="click: display_active"><a href="#">Tous</a></li>
+                    <li data-bind="click: display_debts"><a href="#">Solde négatif</a></li>
+                    <li data-bind="click: display_deleted"><a href="#">Supprimés</a></li>
+                </ul>
             </p>
             <table class="table table-hover table-bordered">
                     <thead>

@@ -32,8 +32,22 @@ class Account:
             return result.number + 1
 
     @classmethod
-    def create(self, firstname, lastname, promo):
-        account = AccountModel(number=self.available(), firstname=firstname, lastname=lastname, promo=promo)
+    def create(self, firstname, lastname, promo, number=None):
+        error = False
+        if number is not None:
+            try:
+                self.getByNumber(number)
+                # If no exception raised, account number is already taken.
+                error = True
+            except ApiError: # Account doesn't exist, creation can proceed
+                pass
+        else:
+            number = self.available()
+
+        if error:
+            raise ApiError("Account number " + str(number) + " is already taken, try another one.")
+
+        account = AccountModel(number=number, firstname=firstname, lastname=lastname, promo=promo)
         session.add(account)
         session.commit()
 
@@ -63,19 +77,27 @@ class Account:
     def list(filter="active", balance=True):
         query = session.query(AccountModel).order_by("number desc")
 
+        if filter not in ['active', 'deleted', 'debts']:
+            raise ApiError("Wrong filter, must be one of these: active, deleted, debts")
+
         if filter == "active":
             query = query.filter_by(deleted=False)
         elif filter == "deleted":
             query = query.filter_by(deleted=True)
-        else:
-            raise ApiError("Wrong filter, must be one of these: active, deleted")
 
         accounts = query.all()
-        if balance:
+        if balance or filter == "debts":
             for account in accounts:
                 balance = transaction.Transaction.calculateBalance(account.id)
                 account.balance = balance
                 account.to_serialize.append('balance')
+
+        if filter == "debts":
+            all = list(accounts)
+            accounts = list()
+            for account in all:
+                if account.balance < 0:
+                    accounts.append(account)
 
         return accounts
 
