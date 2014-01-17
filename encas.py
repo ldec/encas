@@ -18,18 +18,20 @@
 #   You should have received a copy of the GNU General Public License
 #   along with Encas.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Flask, jsonify, request, send_from_directory, url_for, redirect, render_template
+from flask import Flask, request, url_for, redirect, render_template
+from common import FlaskConfig, file_handler, convert
 app = Flask(__name__)
-app.secret_key = "z5f6rfqb1u5o8m4lk,13wr8er78h1d5x5dgd4568rh87i8ys3c2z781136941778"
-app.debug = True
-app.config['WTF_CSRF_ENABLED'] = False
+app.config.from_object(FlaskConfig)
+app.logger.addHandler(file_handler)
 
-from flask.ext.login import login_required, current_user, login_user, logout_user
+from model.database import db
+db.init_app(app)
+
+from flask.ext.login import login_required, login_user, logout_user
 from login import login_manager, UserHandler, login_required_api, admin_required
 login_manager.login_view = 'login'
 login_manager.init_app(app)
 
-from common import convert
 from model import Account, Transaction, User
 from errors import errorhandler, ApiError, MissingFieldsError
 import forms

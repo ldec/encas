@@ -7,7 +7,7 @@ function showAccount(number) {
 		var data = data.data;
 		
 		$("#accountNumber").html(data.number);
-		$("#name").html(data.firstname + " " + data.lastname);
+		$("#name").html(data.lastname + " " + data.firstname);
 		$("#year").html(data.promo);
 		
 		current.account_id = data.id;
@@ -151,10 +151,12 @@ $("#searchByNameForm #nameInput").keyup(function(ev) {
 	}
 });
 
-Mousetrap.bind('o', function() {
+Mousetrap.bind('o', function(ev) {
+    ev.preventDefault();
     boxes.click("number");
 })
 
-Mousetrap.bind('p', function() {
+Mousetrap.bind('p', function(ev) {
+    ev.preventDefault();
     boxes.click("name");
 })

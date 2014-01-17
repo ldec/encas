@@ -1,5 +1,6 @@
 var accountModel = {
 	id: ko.observable(),
+	number : ko.observable(),
 	firstname: ko.observable(),
 	lastname: ko.observable(),
 	promo: ko.observable(),
@@ -19,8 +20,7 @@ var accountModel = {
 	
 	showAccountData: function (account_id) {
 		current.account_id = account_id;
-		
-		this.visible_intro(false);
+
 		this.visible_account_deletion(false);
 		this.visible_account_edition(false);
 	
@@ -30,7 +30,8 @@ var accountModel = {
 			}
 			var data = data.data;
 			
-			this.id("#" + data.id);
+			this.id(data.id);
+            this.number("#" + data.number);
 			this.firstname(data.firstname);
 			this.lastname(data.lastname);
 			this.promo(data.promo);
@@ -38,6 +39,8 @@ var accountModel = {
 			
 			var date = new Date(data.creation);
 			this.date(formatDate(date));
+
+            this.visible_intro(false);
 		}
 		
 		function refreshBalance(data) {
@@ -83,7 +86,7 @@ var accountModel = {
             accountModel.visible_intro(true);
             transactionModel.clear();
 
-            var message = "L'utilisateur " + data.number + " - " + data.lastname + " " + data.firstname + " a été supprimé"
+            var message = "L'utilisateur " + data.lastname + " " + data.firstname + " a été supprimé"
             reportSuccess(message);
         }
 

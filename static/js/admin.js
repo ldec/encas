@@ -8,26 +8,36 @@ var accountAdminModel = {
         balance : ko.observable()
     },
 
+    show_number : ko.observable(true),
+
     displayAccounts : function(filter) {
         function refresh(data) {
             if (reportError(data)) {
                 return;
             }
             var data = data.data;
+
+            for (var i=0; i < data.length; i++) {
+                data[i]['state'] = getAccountState(data[i].balance);
+            }
+
             accountAdminModel.accounts(data);
         }
         api.account.list(refresh, filter);
     },
 
     display_active : function(target) {
+        accountAdminModel.show_number(true);
         accountAdminModel.displayAccounts("active");
     },
 
     display_deleted : function(target) {
+        accountAdminModel.show_number(false);
         accountAdminModel.displayAccounts("deleted");
     },
 
     display_debts : function(target) {
+        accountAdminModel.show_number(true);
         accountAdminModel.displayAccounts("debts");
     },
 
