@@ -44,6 +44,12 @@ class Account:
 
     @classmethod
     def create(self, firstname, lastname, promo, number=None):
+        if len(firstname) > 64 or len(lastname) > 64:
+            raise ApiError("Account name is too long.")
+
+        if number is not None and number < 1:
+            raise ApiError("Account number must be greater than 0")
+
         error = False
         if number is not None:
             try:
@@ -58,9 +64,12 @@ class Account:
         if error:
             raise ApiError("Account number " + str(number) + " is already taken, try another one.")
 
-        account = AccountModel(number=number, firstname=firstname, lastname=lastname, promo=promo)
-        db.session.add(account)
-        db.session.commit()
+        try:
+            account = AccountModel(number=number, firstname=firstname, lastname=lastname, promo=promo)
+            db.session.add(account)
+            db.session.commit()
+        except:
+            raise ApiError("Error while creating account.")
 
         return account
 
@@ -78,6 +87,8 @@ class Account:
             return db.session.query(AccountModel).filter_by(deleted=False).filter_by(number=number).one()
         except NoResultFound:
             raise ApiError("Account not found")
+        except:
+            raise ApiError("Error while retrieving account " + str(number) + ".")
 
     @staticmethod
     def search(firstname):
@@ -88,18 +99,21 @@ class Account:
     def list(filter="active", balance=True):
         query = db.session.query(AccountModel).order_by("number desc")
 
-        if filter not in ['active', 'deleted', 'debts']:
-            raise ApiError("Wrong filter, must be one of these: active, deleted, debts")
+        if filter not in ['active', 'deleted', 'debts', 'staff']:
+            raise ApiError("Wrong filter, must be one of these: active, deleted, debts, staff")
 
-        if filter == "active" or filter=="debts":
-            query = query.filter_by(deleted=False)
-        elif filter == "deleted":
+        if filter == "deleted":
             query = query.filter_by(deleted=True)
+        else:
+            query = query.filter_by(deleted=False)
+
+        if filter == 'staff':
+            query = query.filter_by(staff=True)
 
         accounts = query.all()
         if balance or filter == "debts":
             for account in accounts:
-                balance = transaction.Transaction.calculateBalance(account.id)
+                balance = transaction.Transaction.getBalance(account.id, verify=False)
                 account.balance = balance
                 account.to_serialize.append('balance')
 
@@ -129,6 +143,15 @@ class Account:
 
         db.session.commit()
         return self.account
+
+    def staff(self, status):
+        if status not in [True, False]:
+            raise ApiError("Staff status must be True or False")
+
+        self.account.staff = status
+        db.session.commit()
+        return self.account
+
 
     def delete(self):
         self.account.number = None

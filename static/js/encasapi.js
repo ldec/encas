@@ -10,10 +10,13 @@ var api = {
         api.current_calls++;
         if (api.current_calls === 1) {
             wait.show();
+            reportError();
         }
 
         function wrapped(data) {
-            var result = callback(data);
+            if (callback !== undefined) {
+                var result = callback(data);
+            }
             api.current_calls--;
             if (api.current_calls === 0) {
                 wait.hide();
@@ -47,11 +50,12 @@ var api = {
             message += " Statut jQuery: " + status + ".";
 
             wait.hide();
+            this.current_calls = 0;
 
             reportError({
                 error : true,
                 reason : message
-            }, true);
+            });
         }
 
         return error;
@@ -103,6 +107,7 @@ var api = {
 		},
 		
 		search : function(callback, firstname) {
+            firstname = encodeURIComponent(firstname);
 			var url = '/account/search/' + firstname;
             api.ajax('GET', url, api.wrapper(callback));
 		},
@@ -126,13 +131,24 @@ var api = {
             api.ajax('POST', url, api.wrapper(callback), data);
 		},
 
+        staff : function(callback, account_id, status) {
+            var url = '/account/' + account_id + '/staff';
+            var data = {'staff' : status};
+            api.ajax('POST', url, api.wrapper(callback), data);
+        },
+
         delete : function(callback, account_id) {
             var url = '/account/' + account_id + '/delete';
             api.ajax('POST', url, api.wrapper(callback));
         },
 		
-		balance : function(callback, account_id) {
-			var url = '/account/' + account_id + '/calculate';
+		balance : function(callback, account_id, calculate) {
+            if (calculate === undefined || calculate === false) {
+                var url = '/account/' + account_id + '/balance';
+            }
+			else {
+                var url = '/account/' + account_id + '/calculate';
+            }
             api.ajax('GET', url, api.wrapper(callback));
 		}
 	},

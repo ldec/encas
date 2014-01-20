@@ -23,6 +23,7 @@ from errors import ApiError
 
 from math import isinf
 import account
+import config
 
 class Transaction:
     @staticmethod
@@ -69,12 +70,37 @@ class Transaction:
         return query.all()
 
     @classmethod
+    def getBalance(self, account_id, verify=True, verify_depth=5):
+        transactions = self.getByAccount(account_id, verify_depth)
+        if len(transactions) == 0:
+            return 0
+
+        balance = transactions[0].balance
+
+        if verify:
+            transactions.reverse()
+            cash = transactions[0].balance
+            for transaction in transactions[1:]:
+                cash += transaction.cash
+                if transaction.balance != cash:
+                    message = "Account balance verification failed: " \
+                        + "Operation " + str(transaction.operation) + " is corrupted."
+                    raise ApiError(message)
+
+            if cash != balance:
+                raise ApiError("Account balance verification failed.")
+
+        return balance
+
+    @classmethod
     def calculateBalance(self, account_id):
-        transactions = self.getByAccount(account_id, None, True)
+        transactions = self.getByAccount(account_id, None, False)
 
         cash = 0
         for transaction in transactions:
             cash += transaction.cash
+            if isinf(cash):
+                raise ApiError("Transaction can't be created : new account balance is out of bounds.")
 
         return cash
 
@@ -95,6 +121,9 @@ class Transaction:
 
         if isinf(balance):
             raise ApiError("Transaction can't be created : new account balance is out of bounds.")
+
+        if balance > config.MAX_BALANCE or balance < - config.MAX_BALANCE:
+            raise ApiError("Transaction makes account balance beyond the " + str(config.MAX_BALANCE) + " limit.")
 
         transaction = TransactionModel(account=account_id, operation=self.available(account_id), cash=cash, balance=balance)
         db.session.add(transaction)

@@ -27,7 +27,7 @@ app.logger.addHandler(file_handler)
 from model.database import db
 db.init_app(app)
 
-from flask.ext.login import login_required, login_user, logout_user
+from flask.ext.login import login_required, login_user, logout_user, current_user
 from login import login_manager, UserHandler, login_required_api, admin_required
 login_manager.login_view = 'login'
 login_manager.init_app(app)
@@ -89,8 +89,10 @@ def listAccounts(filter):
         accounts = Account.list("deleted")
     elif filter == "debts":
         accounts = Account.list("debts")
+    elif filter == "staff":
+        accounts = Account.list("staff")
     else:
-        raise ApiError("Wrong filter, must be one of these: active, deleted, debts")
+        raise ApiError("Wrong filter, must be one of these: active, deleted, debts, staff")
 
     return [acc.serialize() for acc in accounts]
 
@@ -122,7 +124,7 @@ def createAccount():
     if form.validate_on_submit():
         account = Account.create(form.firstname.data, form.lastname.data, form.promo.data, form.number.data)
 
-        if form.balance.data is not None:
+        if form.balance.data is not None and form.balance.data != 0:
             Transaction.add(account.id, form.balance.data)
 
         return account.serialize()
@@ -142,6 +144,18 @@ def editAccount(id):
     else:
         raise MissingFieldsError(form.errors.keys())
 
+@app.route('/account/<id>/staff', methods=['POST'])
+@login_required_api
+@errorhandler
+@admin_required
+def staffAccount(id):
+    id = convert(int, id)
+    form = forms.StaffStatusForm()
+    if form.validate_on_submit():
+        return Account(id).staff(form.staff.data).serialize()
+    else:
+        raise MissingFieldsError(form.errors.keys())
+
 @app.route('/account/<id>/delete', methods=['POST'])
 @login_required_api
 @errorhandler
@@ -150,6 +164,13 @@ def deleteAccount(id):
     id = convert(int, id)
 
     return Account(id=id).delete().serialize()
+
+@app.route('/account/<id>/balance', methods=['GET'])
+@login_required_api
+@errorhandler
+def getBalance(id):
+    id = convert(int, id)
+    return {'balance' : Transaction.getBalance(id)}
 
 @app.route('/account/<id>/calculate', methods=['GET'])
 @login_required_api
@@ -221,6 +242,9 @@ def adminCreation():
 @admin_required
 def userRemove(id):
     id = convert(int, id)
+    if id == current_user.get_id():
+        raise ApiError("You can't delete your own account.")
+
     return User(id).remove().serialize()
 
 if __name__ == '__main__':
