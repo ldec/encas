@@ -3,6 +3,7 @@
 
 {% block javascript %}
 <script type="text/javascript" src="/static/js/search.js"></script>
+<script type="text/javascript" src="/static/js/math.min.js"></script>
 <script type="text/javascript" src="/static/js/checkout.js"></script>
 <script type="text/javascript" src="/static/js/transaction.js"></script>
 <script type="text/javascript">
@@ -33,7 +34,7 @@
         boxes.number.hide();
         boxes.name.hide();
         checkoutModel.checkout_focus(false);
-    })
+    });
 </script>
 {% endblock %}
 
@@ -83,18 +84,19 @@
 	
 	<div data-bind="with: checkout" class="row">
         <div class="col-md-4 col-md-offset-4">
-            <h4 data-bind="visible: show_balance" align="center"><b>Solde : <span data-bind="text: balance"> </span>€</b></h4>
+            <h4 data-bind="visible: show_balance" align="center"><b>Solde : <span data-bind="text: balance"></span> €</b></h4>
             <center>
                 <form data-bind="submit: make_checkout" id="checkout" class="form-inline" role="form">
                     <div class="form-group">
                         <div class="input-group">
-                            <input data-bind="hasFocus: checkout_focus, value: checkout_price" class="form-control" type="text" placeholder="Montant">
+                            <input data-bind="hasFocus: checkout_focus, value: checkout_price, valueUpdate: 'afterkeydown'" class="form-control" type="text" placeholder="Montant">
                             <span class="input-group-addon">€</span>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Go !</button>
                 </form>
             </center>
+            <h5 align="center"><b>Montant : <span data-bind="text: checkout_current"></span> €</b></h5>
         </div>
 	</div>
 
